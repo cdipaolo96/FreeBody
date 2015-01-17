@@ -19,21 +19,21 @@ class OneBodyScene: SKScene {
     override func didMoveToView(view: SKView) {
         self.backgroundColor = FBColors.BlueDark
     }
-    
+
     func triangleInRect(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat) -> SKShapeNode {
         let rect = CGRectMake(x, y, width, height)
         let offsetX: CGFloat = CGRectGetMidX(rect)
         let offsetY: CGFloat = CGRectGetMidY(rect)
         var bezierPath: UIBezierPath = UIBezierPath()
-        
+
         bezierPath.moveToPoint(CGPointMake(offsetX, 0))
         bezierPath.addLineToPoint(CGPointMake(-offsetX, offsetY))
         bezierPath.addLineToPoint(CGPointMake(-offsetX, -offsetY))
         bezierPath.closePath()
-        
+
         let shape: SKShapeNode = SKShapeNode()
         shape.path = bezierPath.CGPath
-        
+
         return shape
     }
 
@@ -50,28 +50,28 @@ class OneBodyScene: SKScene {
         node.physicsBody = SKPhysicsBody(rectangleOfSize: node.frame.size)
         node.physicsBody?.dynamic = false
         self.addChild(node)
-        
+
         let nodeCircle = SKShapeNode(circleOfRadius: 10)
         nodeCircle.fillColor = FBColors.Red
         nodeCircle.lineWidth = 0
         nodeCircle.name = "Node"
         node.addChild(nodeCircle)
-        
+
         self.forces.push(Force(0,-9.8,identifier: 0x1))
         println("adding gravity to forces")
-        
 
-            let π = M_PI
-            
-            let force: SKShapeNode = self.forces.data[0].shapeNode(0, y: 0)
-            let rotate = SKAction.rotateToAngle(CGFloat(3*π/2), duration: 0.0)
-            
-            force.runAction(rotate)
-            force.name = "Force"
-            node.addChild(force)
-            println(self.forces.data)
-        
-        
+
+        let π = M_PI
+
+        let force: SKShapeNode = self.forces.data[0].shapeNode(0, y: 0)
+        let rotate = SKAction.rotateToAngle(CGFloat(3*π/2), duration: 0.0)
+
+        force.runAction(rotate)
+        force.name = "Force"
+        node.addChild(force)
+        println(self.forces.data)
+
+
         let backButton = FBButtonNode(text: "Main Menu", identifier: "Back", size: 24)
         backButton.name = "MainMenu"
         self.addChild(backButton)
@@ -98,11 +98,11 @@ class OneBodyScene: SKScene {
         options.name = "Options"
         options.lineWidth = 0
         self.addChild(options)
-        
+
         let forcesAdd = FBButtonNode(text: "+", identifier: "AddForce", size: 24)
         forcesAdd.name = "ForcesAdd"
         options.addChild(forcesAdd)
-        
+
 
         self.name = "Background"
 
@@ -141,7 +141,7 @@ class OneBodyScene: SKScene {
                 else {
                     //move all the way. acts on option pane and children, along with all other nodes
                     (child as SKNode).runAction(SKAction.moveBy(CGVectorMake(+self.frame.width/3, 0), duration: 0.25))
-                    
+
                 }
             }
             isOptionVisible = false
@@ -150,7 +150,7 @@ class OneBodyScene: SKScene {
 
     func switchPlayButton() {
         isRunning = !isRunning
-        
+
         let startButton = self.childNodeWithName("Play")
         let stopButton = self.childNodeWithName("Pause")
 
@@ -180,16 +180,16 @@ class OneBodyScene: SKScene {
 
         }
     }
-    
+
     // add a force to the forces stack
     func addForce(){
-    
+
         let bitLeft: UInt32 = UInt32(Int(self.forces.data.count) - 1)
         var identif: UInt32 = 0x1 << bitLeft
-        
-        
+
+
         let exampleForce: Force = Force(5,0,identifier: identif)
-        
+
         self.forces.push(exampleForce)
         println("adding force with identifier: \(identif) || \(self.forces.data.count) objects in stack")
         if let object = self.childNodeWithName("Node"){
@@ -202,61 +202,81 @@ class OneBodyScene: SKScene {
 
     override func touchesBegan(touches: NSSet, withEvent event: UIEvent) {
         let touch = touches.anyObject() as UITouch
-        let nodeTouched = nodeAtPoint(touch.locationInNode(self))
-        if (nodeTouched.parent?.parent is FBButtonNode) {
-            (nodeTouched.parent!.parent as FBButtonNode).setTouched(true)
+        let childOfSceneNodeTouched = nodeAtPoint(touch.locationInNode(self))
+
+        if (childOfSceneNodeTouched.parent?.parent is FBButtonNode) {
+            (childOfSceneNodeTouched.parent!.parent as FBButtonNode).setTouched(true)
         }
+
+        let mainNode = self.childNodeWithName("Node")
+        let childOfMainNodeTouched = mainNode?.nodeAtPoint(touch.locationInNode(mainNode))
+        if (childOfMainNodeTouched?.name? == "Force") {
+            (childOfMainNodeTouched as SKShapeNode).strokeColor = FBColors.Green
+            (childOfMainNodeTouched as SKShapeNode).fillColor = FBColors.Green
+        }
+
     }
 
     override func touchesMoved(touches: NSSet, withEvent event: UIEvent) {
         let touch = touches.anyObject() as UITouch
 
-        let nodeTouched = nodeAtPoint(touch.previousLocationInNode(self))
+        let childOfMainSceneTouched = nodeAtPoint(touch.previousLocationInNode(self))
 
-        if (nodeTouched !== nodeAtPoint(touch.locationInNode(self))) {
-            if (nodeTouched.parent?.parent is FBButtonNode) {
-                (nodeTouched.parent!.parent as FBButtonNode).setTouched(false)
+        if (childOfMainSceneTouched !== nodeAtPoint(touch.locationInNode(self))) {
+            if (childOfMainSceneTouched.parent?.parent is FBButtonNode) {
+                (childOfMainSceneTouched.parent!.parent as FBButtonNode).setTouched(false)
             }
         }
+
+        let mainNode = self.childNodeWithName("Node")
+        let childOfMainNodeTouched = mainNode?.nodeAtPoint(touch.locationInNode(mainNode))
+        if (childOfMainNodeTouched?.name? == "Force") {
+            childOfMainNodeTouched as 
+        }
+
     }
 
     override func touchesEnded(touches: NSSet, withEvent event: UIEvent) {
         let touch = touches.anyObject() as UITouch
-        let nodeTouched = nodeAtPoint(touch.locationInNode(self))
+        let childOfSceneNodeTouched = nodeAtPoint(touch.locationInNode(self))
 
-        if (nodeTouched.parent?.parent is FBButtonNode) {
-            (nodeTouched.parent!.parent as FBButtonNode).setTouched(false)
+        if (childOfSceneNodeTouched.parent?.parent is FBButtonNode) {
+            (childOfSceneNodeTouched.parent!.parent as FBButtonNode).setTouched(false)
         }
 
-        if (nodeTouched.name? != nil) {
-            switch nodeTouched.name! {
-                
+        if (childOfSceneNodeTouched.name? != nil) {
+            switch childOfSceneNodeTouched.name! {
+
             case "Node":
                 showOptionPane()
-                
+
             case "Background":
                 hideOptionPane()
-                
+
             case "Play":
                 switchPlayButton()
-                
+
             case "Pause":
                 switchPlayButton()
 
             case "Back":
                 self.view!.presentScene(MainMenuScene(size: self.size), transition: .doorsCloseHorizontalWithDuration(0.5))
-            
+
             case "AddForce":
                 addForce()
-            
-            case "Force":
-                println("Touched a Force")
-                
+
             default:
                 println("Nothing Touched")
             }
         }
-        
+
+        let mainNode = self.childNodeWithName("Node")
+        let childOfMainNodeTouched = mainNode?.nodeAtPoint(touch.locationInNode(mainNode))
+        if (childOfMainNodeTouched?.name? == "Force") {
+            (childOfMainNodeTouched as SKShapeNode).strokeColor = FBColors.Red
+            (childOfMainNodeTouched as SKShapeNode).fillColor = FBColors.Red
+        }
+
     }
     
     required init?(coder aDecoder: NSCoder) {
